@@ -1,0 +1,7 @@
+[ "amqp_client": {:git, "git://github.com/atulpundhir/amqp_client.git", "851923b8d5f7db8b3b3bc57bde79c15fa12fa05f", [{:ref, "master"}]},
+  "ex_doc": {:git, "git://github.com/elixir-lang/ex_doc.git", "b503a6b37a142aeb527f3e29949287f398030d4b", []},
+  "gen_bunny": {:git, "git://github.com/atulpundhir/gen_bunny.git", "8fbbd38b1860193173f95e3981175307b67f1f02", []},
+  "gproc": {:git, "git://github.com/esl/gproc.git", "6f7f6c32e1a26c0df8215248a54594a05401b296", []},
+  "jiffy": {:git, "git://github.com/davisp/jiffy.git", "d16a4fd968e000b65e4678cccfad68d7a0a8bd1c", []},
+  "meck": {:git, "git://github.com/esl/meck.git", "746832b84f8ce7da0459851049ae80ecb09a8a73", [{:ref, "master"}]},
+  "rabbit_common": {:git, "https://github.com/mochi/rabbit_common.git", "b1cba0355e5e686195fe30437dd2bbd0c416ac20", [{:ref, "master"}]} ]
