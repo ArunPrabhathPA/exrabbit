@@ -2,7 +2,7 @@
 
 ## DONT USE IT (WIP)
 
-Usage of Exrabbit is very easy. 
+Use of Exrabbit is very easy. 
 
 * ####Add it as a dependency in mix.exs 
 
