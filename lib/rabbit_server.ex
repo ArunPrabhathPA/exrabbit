@@ -26,7 +26,7 @@ defmodule Rabbit.Server do
   DONT USE IT DIRECT INSTEAD CALL start_publisher(:name)
   """
   def handle_call({:publisher, connArgs}, _from, state) do
-    handle_call_({:connect, connArgs, []}, _from, state)
+    handle_call_({:pub_connect, connArgs, []}, _from, state)
   end
 
   @doc """
@@ -35,7 +35,7 @@ defmodule Rabbit.Server do
   DONT USE IT DIRECT INSTEAD CALL start_publisher(:consumer)
   """
   def handle_call({:consumer, connArgs}, _from, state) do
-    handle_call_({:connect, connArgs, [:subscribe]}, _from, state)
+    handle_call_({:con_connect, connArgs, [:subscribe]}, _from, state)
   end
 
   @doc """
@@ -53,10 +53,9 @@ defmodule Rabbit.Server do
   Replies {:ok, pid} or {:error, reason}
   DONT USE IT DIRECT INSTEAD CALL start_publisher() or start_consumer()
   """
-  def handle_call_({:connect, connArgs, args}, _from, state) do
-    [name, host, port, username, password, exchange, queue] = connArgs
-    res = :bunnyc.start_link(name, {:network, host, port, {username, password}}, {exchange, queue, ""}, args, self())
-      :io.format("Arguments are ~p~n", [res])
+  def handle_call_({:con_connect, connArgs, args}, _from, state) do
+    [name, host, port, username, password, exchange, queue, key] = connArgs
+    res = :bunnyc.start_link(name, {:network, host, port, {username, password}}, {exchange, queue, key}, args, self())
     case res do
       {:ok, pid } ->
         IO.puts "Rabbit Server Started"
@@ -70,6 +69,21 @@ defmodule Rabbit.Server do
   {:reply, :ok, state}
   end
 
+  def handle_call_({:pub_connect, connArgs, args}, _from, state) do
+    [name, host, port, username, password, exchange, queue] = connArgs
+    res = :bunnyc.start_link(name, {:network, host, port, {username, password}}, {exchange, queue, ""}, args, self())
+    case res do
+      {:ok, pid } ->
+        IO.puts "Rabbit Server Started"
+        res
+      {:error, reason} ->
+        IO.puts "Error while starting producer"
+        res
+      _ ->
+        IO.puts "Unexpected Error"
+    end
+  {:reply, :ok, state}
+  end
 
   @doc """
   Message received when consumer is started succeffuly
@@ -85,8 +99,7 @@ defmodule Rabbit.Server do
   """
   def handle_info({{:"basic.deliver",_,_,_,_,queue}, {amqp_msg, msgInfo, {:json, msg}}}, state) do
    # :gproc.send({:p,:l,:subscribers_pool}, {:mq_msg, msg})
-   :io.format("State is ~p~n queue is ~p~n amqp_msg is ~p~n msginfo is ~p~n", [msg, queue, amqp_msg, msgInfo])
-   state <- :jiffy.encode(msg)
+   state <- {:mq_msg, :jiffy.decode(msg)}
    {:noreply, state}
   end
 
@@ -95,8 +108,7 @@ defmodule Rabbit.Server do
   noreply is sent
   """
   def handle_info({{:"basic.deliver",_,_,_,_,queue}, {amqp_msg, msgInfo, msg}}, state) do
-   :io.format("State is ~p~n queue is ~p~n amqp_msg is ~p~n msginfo is ~p~n", [msg, queue, amqp_msg, msgInfo])
-   state <- msg
+   state <- {:mq_msg, :jiffy.decode(msg)}
    {:noreply, state}
   end
 
@@ -105,6 +117,10 @@ defmodule Rabbit.Server do
     Starts consumer or publisher
     DO NOT CALL IT DIRECTLY USE start_publisher or start_consumer
   """
+  def start_consumer_mq_(type, name, host, port, username, password, exchange, queue, key) do
+     :gen_server.call :rabbit, {type, [name, host, port, username, password, exchange, queue, key]}
+  end
+
   def start_mq_(type, name, host, port, username, password, exchange, queue) do
      :gen_server.call :rabbit, {type, [name, host, port, username, password, exchange, queue]}
   end
@@ -132,7 +148,6 @@ defmodule Rabbit.Server do
   def start_consumer_test(name) do
     rabbitInfo = MqServer.new()
     :gen_server.call :rabbit, {:consumer, [name, rabbitInfo.host, rabbitInfo.port, rabbitInfo.username, rabbitInfo.password, rabbitInfo.exchange, "testing"]}
-
   end
 
   @doc """
@@ -219,32 +234,32 @@ defmodule Rabbit.Server do
 
   def start_consumer(name) do
     rabbitInfo = MqServer.new()
-    start_mq_(:consumer, name, rabbitInfo.host, rabbitInfo.port, rabbitInfo.username, rabbitInfo.password, rabbitInfo.exchange, rabbitInfo.queue)
+    start_consumer_mq_(:consumer, name, rabbitInfo.host, rabbitInfo.port, rabbitInfo.username, rabbitInfo.password, rabbitInfo.exchange, rabbitInfo.queue, rabbitInfo.queue)
   end
 
   def start_consumer(name, host) do
     rabbitInfo = MqServer.new(host: host)
-    start_mq_(:consumer, name, rabbitInfo.host, rabbitInfo.port, rabbitInfo.username, rabbitInfo.password, rabbitInfo.exchange, rabbitInfo.queue)
+    start_consumer_mq_(:consumer, name, rabbitInfo.host, rabbitInfo.port, rabbitInfo.username, rabbitInfo.password, rabbitInfo.exchange, rabbitInfo.queue, rabbitInfo.queue)
   end
 
   def start_consumer(name, host, port) do
     rabbitInfo = MqServer.new(host: host, port: port)
-    start_mq_(:consumer, name, rabbitInfo.host, rabbitInfo.port, rabbitInfo.username, rabbitInfo.password, rabbitInfo.exchange, rabbitInfo.queue)
+    start_consumer_mq_(:consumer, name, rabbitInfo.host, rabbitInfo.port, rabbitInfo.username, rabbitInfo.password, rabbitInfo.exchange, rabbitInfo.queue, rabbitInfo.queue)
   end
 
   def start_consumer(name, host, port, username, password) do
     rabbitInfo = MqServer.new(host: host, port: port, username: username, password: password)
-    start_mq_(:consumer, name, rabbitInfo.host, rabbitInfo.port, rabbitInfo.username, rabbitInfo.password, rabbitInfo.exchange, rabbitInfo.queue)
+    start_consumer_mq_(:consumer, name, rabbitInfo.host, rabbitInfo.port, rabbitInfo.username, rabbitInfo.password, rabbitInfo.exchange, rabbitInfo.queue, rabbitInfo.queue)
   end
 
   def start_consumer(name, host, port, username, password, exchange) do
     rabbitInfo = MqServer.new(host: host, port: port, username: username, password: password, exchange: exchange)
-    start_mq_(:consumer, name, rabbitInfo.host, rabbitInfo.port, rabbitInfo.username, rabbitInfo.password, rabbitInfo.exchange, rabbitInfo.queue)
+    start_consumer_mq_(:consumer, name, rabbitInfo.host, rabbitInfo.port, rabbitInfo.username, rabbitInfo.password, rabbitInfo.exchange, rabbitInfo.queue, rabbitInfo.queue)
   end
 
-  def start_consumer(name, host, port, username, password, exchange, queue) do
+  def start_consumer(name, host, port, username, password, exchange, queue, key) do
     rabbitInfo = MqServer.new(host: host, port: port, username: username, password: password, exchange: exchange, queue: queue)
-    start_mq_(:consumer, name, rabbitInfo.host, rabbitInfo.port, rabbitInfo.username, rabbitInfo.password, rabbitInfo.exchange, rabbitInfo.queue)
+    start_consumer_mq_(:consumer, name, rabbitInfo.host, rabbitInfo.port, rabbitInfo.username, rabbitInfo.password, rabbitInfo.exchange, rabbitInfo.queue,key)
   end
 
 
@@ -256,9 +271,24 @@ defmodule Rabbit.Server do
       pub is the atom which was provided while starting publisher
       message is the text needs to be published
   """
-  def publish(publisher, message) do
-    :bunnyc.publish(publisher, "", message)
+  def publish(publisher, queue, msg) do
+   message =  {[{"type", "json"}, {"key", queue}, {"params", msg}]}
+   :bunnyc.publish(publisher, queue, :jiffy.encode(message))
   end
+
+  def publish(publisher, msg) do
+   message =  {[{"type", "json"}, {"key", ""}, {"params", {[{"message", msg}]}}]}
+   :bunnyc.publish(publisher, :jiffy.encode(message))
+  end
+
+  #def publish(publisher, message) do
+  #  :bunnyc.publish(publisher, "", message)
+  #end
+
+  #def publish(publisher, queue, message) do
+   # :bunnyc.publish(publisher, queue, message)
+ # end
+
 
   @doc """
     subscribes to receive mesage
