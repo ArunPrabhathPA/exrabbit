@@ -20,8 +20,6 @@ defmodule Rabbit.Mixfile do
   defp deps do
     [
       {:gen_bunny, "0.1", github: "atulpundhir/gen_bunny"},
-      {:gproc, github: "esl/gproc"},
-      {:ex_doc, github: "elixir-lang/ex_doc"},
       {:jiffy, github: "davisp/jiffy"}
     ]
   end
