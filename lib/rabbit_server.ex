@@ -272,13 +272,11 @@ defmodule Rabbit.Server do
       message is the text needs to be published
   """
   def publish(publisher, queue, msg) do
-   message =  {[{"type", "json"}, {"key", queue}, {"params", msg}]}
-   :bunnyc.publish(publisher, queue, message)
+   :bunnyc.publish(publisher, queue, msg)
   end
 
   def publish(publisher, msg) do
-   message =  {[{"type", "json"}, {"key", ""}, {"params", {[{"message", msg}]}}]}
-   :bunnyc.publish(publisher, message)
+   :bunnyc.publish(publisher, msg)
   end
 
 
