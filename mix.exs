@@ -11,7 +11,7 @@ defmodule Rabbit.Mixfile do
 
   # Configuration for the OTP application
   def application do
-    [ applications: [:gproc],
+    [ applications: [],
     mod: { Rabbit, [] }]
   end
 
@@ -19,8 +19,7 @@ defmodule Rabbit.Mixfile do
   # { :foobar, "~> 0.1", git: "https://github.com/elixir-lang/foobar.git" }
   defp deps do
     [
-      {:gen_bunny, "0.1", github: "atulpundhir/gen_bunny"},
-      {:jiffy, github: "davisp/jiffy"}
+      {:gen_bunny, "0.1", github: "atulpundhir/gen_bunny"}
     ]
   end
 end
