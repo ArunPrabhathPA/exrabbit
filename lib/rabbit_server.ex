@@ -99,7 +99,7 @@ defmodule Rabbit.Server do
   """
   def handle_info({{:"basic.deliver",_,_,_,_,queue}, {amqp_msg, msgInfo, {:json, msg}}}, state) do
    # :gproc.send({:p,:l,:subscribers_pool}, {:mq_msg, msg})
-   state <- {:mq_msg, :jiffy.decode(msg)}
+   state <- {:mq_msg, msg}
    {:noreply, state}
   end
 
@@ -108,7 +108,7 @@ defmodule Rabbit.Server do
   noreply is sent
   """
   def handle_info({{:"basic.deliver",_,_,_,_,queue}, {amqp_msg, msgInfo, msg}}, state) do
-   state <- {:mq_msg, :jiffy.decode(msg)}
+   state <- {:mq_msg, msg}
    {:noreply, state}
   end
 
@@ -273,13 +273,14 @@ defmodule Rabbit.Server do
   """
   def publish(publisher, queue, msg) do
    message =  {[{"type", "json"}, {"key", queue}, {"params", msg}]}
-   :bunnyc.publish(publisher, queue, :jiffy.encode(message))
+   :bunnyc.publish(publisher, queue, message)
   end
 
   def publish(publisher, msg) do
    message =  {[{"type", "json"}, {"key", ""}, {"params", {[{"message", msg}]}}]}
-   :bunnyc.publish(publisher, :jiffy.encode(message))
+   :bunnyc.publish(publisher, message)
   end
+
 
   #def publish(publisher, message) do
   #  :bunnyc.publish(publisher, "", message)
