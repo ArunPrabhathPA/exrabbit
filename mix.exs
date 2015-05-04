@@ -5,7 +5,7 @@ defmodule Rabbit.Mixfile do
     [ app: :rabbit,
       version: "0.0.1",
       name:  "Elixir RabbitMq",
-      elixir: "~> 1.0,
+      elixir: "~> 1.0",
       deps: deps ]
   end
 
