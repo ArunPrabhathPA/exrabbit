@@ -5,7 +5,7 @@ defmodule Rabbit.Mixfile do
     [ app: :rabbit,
       version: "0.0.1",
       name:  "Elixir RabbitMq",
-      elixir: "~> 0.10.3-dev",
+      elixir: "~> 1.0,
       deps: deps ]
   end
 
@@ -19,7 +19,7 @@ defmodule Rabbit.Mixfile do
   # { :foobar, "~> 0.1", git: "https://github.com/elixir-lang/foobar.git" }
   defp deps do
     [
-      {:gen_bunny, "0.1", github: "atulpundhir/gen_bunny"}
+      {:gen_bunny, "0.1", github: "atulpundhir/gen_bunny", compile: "rebar compile"}
     ]
   end
 end
